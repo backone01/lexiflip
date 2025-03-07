@@ -1,35 +1,41 @@
 
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { VocabularyWord } from '@/types/vocabulary';
 
 interface QuizQuestionProps {
   currentWord: VocabularyWord;
-  userAnswer: string;
-  setUserAnswer: (answer: string) => void;
+  options: string[];
+  selectedOption: string | null;
+  onSelectOption: (option: string) => void;
   isAnswerChecked: boolean;
   isCorrect: boolean;
-  handleKeyDown: (e: React.KeyboardEvent) => void;
   progress: number;
 }
 
 const QuizQuestion = ({
   currentWord,
-  userAnswer,
-  setUserAnswer,
+  options,
+  selectedOption,
+  onSelectOption,
   isAnswerChecked,
   isCorrect,
-  handleKeyDown,
   progress
 }: QuizQuestionProps) => {
-  const inputRef = useRef<HTMLInputElement>(null);
   
-  useEffect(() => {
-    // Focus the input when the current word changes
-    if (inputRef.current) {
-      inputRef.current.focus();
+  const getOptionClassName = (option: string) => {
+    if (!isAnswerChecked) return "p-4 rounded-lg border text-left transition-all";
+    
+    if (option === currentWord.languageB) {
+      return "p-4 rounded-lg border text-left transition-all border-green-500 bg-green-50";
     }
-  }, [currentWord]);
+    
+    if (option === selectedOption && option !== currentWord.languageB) {
+      return "p-4 rounded-lg border text-left transition-all border-red-500 bg-red-50";
+    }
+    
+    return "p-4 rounded-lg border text-left transition-all opacity-50";
+  };
 
   return (
     <>
@@ -47,44 +53,33 @@ const QuizQuestion = ({
         </div>
       </div>
 
-      <div className="mb-6">
-        <div className="relative">
-          <input
-            ref={inputRef}
-            type="text"
-            value={userAnswer}
-            onChange={(e) => setUserAnswer(e.target.value)}
-            onKeyDown={handleKeyDown}
+      <div className="grid grid-cols-1 gap-3 mb-6">
+        {options.map((option, index) => (
+          <button
+            key={index}
+            className={getOptionClassName(option)}
+            onClick={() => onSelectOption(option)}
             disabled={isAnswerChecked}
-            placeholder="Ketik jawaban Anda di sini..."
-            className={`word-input w-full ${
-              isAnswerChecked 
-                ? isCorrect 
-                  ? 'border-green-500 bg-green-50' 
-                  : 'border-red-500 bg-red-50'
-                : ''
-            }`}
-            autoFocus
-          />
-          
-          {isAnswerChecked && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              {isCorrect ? (
-                <CheckCircle className="text-green-500 h-5 w-5" />
-              ) : (
-                <XCircle className="text-red-500 h-5 w-5" />
+          >
+            <div className="flex items-center">
+              <span className="flex-1">{option}</span>
+              {selectedOption === option && isAnswerChecked && isCorrect && (
+                <CheckCircle className="text-green-500 ml-2 h-5 w-5" />
+              )}
+              {selectedOption === option && isAnswerChecked && !isCorrect && (
+                <XCircle className="text-red-500 ml-2 h-5 w-5" />
               )}
             </div>
-          )}
-        </div>
-        
-        {isAnswerChecked && !isCorrect && (
-          <div className="mt-2 text-sm flex items-center text-muted-foreground">
-            <AlertCircle className="h-4 w-4 mr-1" />
-            <span>Jawaban yang benar: <span className="font-medium text-foreground">{currentWord.languageB}</span></span>
-          </div>
-        )}
+          </button>
+        ))}
       </div>
+
+      {isAnswerChecked && !isCorrect && (
+        <div className="mt-2 mb-4 text-sm flex items-center text-muted-foreground">
+          <AlertCircle className="h-4 w-4 mr-1" />
+          <span>Jawaban yang benar: <span className="font-medium text-foreground">{currentWord.languageB}</span></span>
+        </div>
+      )}
     </>
   );
 };

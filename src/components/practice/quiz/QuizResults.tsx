@@ -57,7 +57,7 @@ const QuizResults = ({ results, resetQuiz, handleRandomize }: QuizResultsProps) 
                   <p className="font-medium">{result.word.languageA}</p>
                   <div className="mt-1 text-sm">
                     <div className="flex items-center">
-                      <span className="text-muted-foreground mr-2">Jawaban Anda:</span> 
+                      <span className="text-muted-foreground mr-2">Pilihan Anda:</span> 
                       <span className={result.isCorrect ? 'text-green-600' : 'text-red-600'}>
                         {result.userAnswer}
                       </span>
