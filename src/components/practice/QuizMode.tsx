@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useVocabulary } from '@/contexts/VocabularyContext';
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, XCircle, AlertCircle, ChevronRight, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VocabularyWord } from '@/types/vocabulary';
+import { toast } from 'sonner';
 
 interface AnswerResult {
   word: VocabularyWord;
@@ -13,6 +14,7 @@ interface AnswerResult {
 
 const QuizMode = () => {
   const { currentList } = useVocabulary();
+  const [words, setWords] = useState<VocabularyWord[]>([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
@@ -23,7 +25,12 @@ const QuizMode = () => {
   
   const inputRef = useRef<HTMLInputElement>(null);
   
-  const words = currentList?.words || [];
+  useEffect(() => {
+    if (currentList?.words) {
+      setWords(currentList.words);
+    }
+  }, [currentList]);
+  
   const currentWord = words[currentWordIndex];
   
   useEffect(() => {
@@ -65,6 +72,21 @@ const QuizMode = () => {
     } else {
       setIsFinished(true);
     }
+  };
+
+  const handleRandomize = () => {
+    if (isFinished) {
+      resetQuiz();
+    }
+    
+    setUserAnswer('');
+    setIsAnswerChecked(false);
+    const shuffledWords = [...words].sort(() => Math.random() - 0.5);
+    setWords(shuffledWords);
+    setCurrentWordIndex(0);
+    setResults([]);
+    setIsFinished(false);
+    toast.success('Kosakata telah diacak');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -152,9 +174,13 @@ const QuizMode = () => {
             ))}
           </div>
           
-          <div className="flex justify-center">
+          <div className="flex justify-center gap-3">
             <Button onClick={resetQuiz} size="lg">
               Mulai Quiz Baru
+            </Button>
+            <Button onClick={handleRandomize} variant="secondary" size="lg" className="flex items-center gap-2">
+              <Shuffle className="h-4 w-4" />
+              Acak dan Mulai Lagi
             </Button>
           </div>
         </div>
@@ -171,8 +197,19 @@ const QuizMode = () => {
         />
       </div>
 
-      <div className="text-center mb-2 text-muted-foreground">
-        <p>Pertanyaan {currentWordIndex + 1} dari {words.length}</p>
+      <div className="flex justify-between items-center mb-2">
+        <p className="text-muted-foreground">
+          Pertanyaan {currentWordIndex + 1} dari {words.length}
+        </p>
+        <Button 
+          variant="secondary" 
+          size="sm" 
+          className="flex items-center gap-1 rounded-full"
+          onClick={handleRandomize}
+        >
+          <Shuffle className="h-4 w-4" />
+          <span>Acak</span>
+        </Button>
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6 mb-6 animate-fade-in">
@@ -227,8 +264,9 @@ const QuizMode = () => {
             Periksa
           </Button>
         ) : (
-          <Button onClick={handleNext} variant="default">
+          <Button onClick={handleNext} variant="default" className="flex items-center gap-2">
             {currentWordIndex < words.length - 1 ? 'Selanjutnya' : 'Lihat Hasil'}
+            <ChevronRight className="h-4 w-4" />
           </Button>
         )}
       </div>

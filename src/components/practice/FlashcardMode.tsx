@@ -1,24 +1,31 @@
 
 import React, { useState, useEffect } from 'react';
 import { useVocabulary } from '@/contexts/VocabularyContext';
-import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VocabularyWord } from '@/types/vocabulary';
+import { toast } from 'sonner';
 
 const FlashcardMode = () => {
   const { currentList } = useVocabulary();
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [words, setWords] = useState<VocabularyWord[]>([]);
 
-  const words = currentList?.words || [];
-  const currentWord = words[currentWordIndex] || null;
+  useEffect(() => {
+    if (currentList?.words) {
+      setWords(currentList.words);
+    }
+  }, [currentList]);
 
   useEffect(() => {
     if (words.length > 0) {
       setProgress(((currentWordIndex + 1) / words.length) * 100);
     }
   }, [currentWordIndex, words]);
+
+  const currentWord = words[currentWordIndex] || null;
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
@@ -43,6 +50,14 @@ const FlashcardMode = () => {
     setTimeout(() => {
       setCurrentWordIndex(0);
     }, 200);
+  };
+
+  const handleRandomize = () => {
+    setIsFlipped(false);
+    const shuffledWords = [...words].sort(() => Math.random() - 0.5);
+    setWords(shuffledWords);
+    setCurrentWordIndex(0);
+    toast.success('Kosakata telah diacak');
   };
 
   if (!currentWord) {
@@ -87,7 +102,7 @@ const FlashcardMode = () => {
         </div>
       </div>
 
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-2">
         <Button
           variant="outline"
           size="icon"
@@ -99,10 +114,17 @@ const FlashcardMode = () => {
           <span className="sr-only">Previous</span>
         </Button>
 
-        <Button variant="outline" onClick={handleRestart} className="rounded-full">
-          <RotateCcw className="h-4 w-4 mr-2" />
-          <span>Mulai Ulang</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleRestart} className="rounded-full">
+            <RotateCcw className="h-4 w-4 mr-2" />
+            <span>Mulai Ulang</span>
+          </Button>
+          
+          <Button variant="secondary" onClick={handleRandomize} className="rounded-full">
+            <Shuffle className="h-4 w-4 mr-2" />
+            <span>Acak</span>
+          </Button>
+        </div>
 
         <Button
           variant="outline"

@@ -12,3 +12,7 @@ export interface VocabularyList {
 }
 
 export type PracticeMode = 'flashcard' | 'multipleChoice' | 'quiz';
+
+export interface RandomizationSettings {
+  isRandomized: boolean;
+}

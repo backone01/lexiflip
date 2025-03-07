@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useVocabulary } from '@/contexts/VocabularyContext';
-import { Check, X, ChevronRight } from 'lucide-react';
+import { Check, X, ChevronRight, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VocabularyWord } from '@/types/vocabulary';
+import { toast } from 'sonner';
 
 const MultipleChoiceMode = () => {
   const { currentList } = useVocabulary();
+  const [words, setWords] = useState<VocabularyWord[]>([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -14,7 +16,12 @@ const MultipleChoiceMode = () => {
   const [score, setScore] = useState(0);
   const [progress, setProgress] = useState(0);
 
-  const words = currentList?.words || [];
+  useEffect(() => {
+    if (currentList?.words) {
+      setWords(currentList.words);
+    }
+  }, [currentList]);
+
   const currentWord = words[currentWordIndex];
 
   const generateOptions = useCallback(() => {
@@ -70,6 +77,16 @@ const MultipleChoiceMode = () => {
     }
   };
 
+  const handleRandomize = () => {
+    setSelectedOption(null);
+    setIsCorrect(null);
+    const shuffledWords = [...words].sort(() => Math.random() - 0.5);
+    setWords(shuffledWords);
+    setCurrentWordIndex(0);
+    setScore(0);
+    toast.success('Kosakata telah diacak');
+  };
+
   const getOptionClass = (option: string) => {
     if (selectedOption === null) return '';
     
@@ -105,9 +122,20 @@ const MultipleChoiceMode = () => {
         <p className="text-muted-foreground">
           Pertanyaan {currentWordIndex + 1} dari {words.length}
         </p>
-        <p className="font-medium">
-          Skor: {score}/{currentWordIndex + (selectedOption ? 1 : 0)}
-        </p>
+        <div className="flex items-center gap-4">
+          <p className="font-medium">
+            Skor: {score}/{currentWordIndex + (selectedOption ? 1 : 0)}
+          </p>
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            className="flex items-center gap-1 rounded-full"
+            onClick={handleRandomize}
+          >
+            <Shuffle className="h-4 w-4" />
+            <span>Acak</span>
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6 mb-6 animate-fade-in">

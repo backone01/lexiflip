@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { VocabularyList, VocabularyWord } from '@/types/vocabulary';
+import { VocabularyList, VocabularyWord, RandomizationSettings } from '@/types/vocabulary';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
@@ -10,6 +10,8 @@ interface VocabularyContextType {
   uploadVocabulary: (file: File) => Promise<void>;
   selectList: (listId: string) => void;
   isLoading: boolean;
+  randomizationSettings: RandomizationSettings;
+  toggleRandomization: () => void;
 }
 
 const VocabularyContext = createContext<VocabularyContextType | undefined>(undefined);
@@ -26,6 +28,15 @@ export const VocabularyProvider = ({ children }: { children: ReactNode }) => {
   const [vocabularyLists, setVocabularyLists] = useState<VocabularyList[]>([]);
   const [currentList, setCurrentList] = useState<VocabularyList | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [randomizationSettings, setRandomizationSettings] = useState<RandomizationSettings>({
+    isRandomized: true, // Set default to true for randomized words
+  });
+
+  const toggleRandomization = () => {
+    setRandomizationSettings(prev => ({
+      isRandomized: !prev.isRandomized
+    }));
+  };
 
   const uploadVocabulary = async (file: File) => {
     setIsLoading(true);
@@ -55,11 +66,16 @@ export const VocabularyProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // Create the vocabulary words
-      const words: VocabularyWord[] = data.map((row, index) => ({
+      let words: VocabularyWord[] = data.map((row, index) => ({
         id: index + 1,
         languageA: row[headers[0]] || '',
         languageB: row[headers[1]] || ''
       }));
+      
+      // Randomize the words order if randomization is enabled
+      if (randomizationSettings.isRandomized) {
+        words = shuffleArray([...words]);
+      }
       
       const newList: VocabularyList = {
         id: Date.now().toString(),
@@ -86,13 +102,25 @@ export const VocabularyProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Helper function to shuffle an array
+  const shuffleArray = <T,>(array: T[]): T[] => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  };
+
   return (
     <VocabularyContext.Provider value={{
       vocabularyLists,
       currentList,
       uploadVocabulary,
       selectList,
-      isLoading
+      isLoading,
+      randomizationSettings,
+      toggleRandomization
     }}>
       {children}
     </VocabularyContext.Provider>
